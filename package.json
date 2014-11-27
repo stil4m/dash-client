@@ -1,0 +1,27 @@
+{
+  "name": "dash-client",
+  "version": "1.0.0",
+  "description": "Dash Client",
+  "main": "lib.js",
+  "dependencies": {
+    "request": "~2.47.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stil4m/dash-client.git"
+  },
+  "keywords": [
+    "dash",
+    "client"
+  ],
+  "author": "Mats Stijlaart",
+  "license": "Apache License 2.0",
+  "bugs": {
+    "url": "https://github.com/stil4m/dash-client/issues"
+  },
+  "homepage": "https://github.com/stil4m/dash-client"
+}
