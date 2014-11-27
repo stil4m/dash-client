@@ -1,6 +1,6 @@
 {
   "name": "dash-client",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Dash Client",
   "main": "lib.js",
   "dependencies": {
