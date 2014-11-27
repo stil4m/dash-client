@@ -1,13 +1,7 @@
-var get = require('./util/get');
-var post = require('./util/post');
-
 module.exports = function (dashConfig) {
+  var taskExecutor = require('./task-executor');
   if (!dashConfig.url) {
     throw new Error("Missing dash url");
-  }
-
-  function dashUrl(taskDef) {
-    return dashConfig.url + '/api/data/' + taskDef.context + '/' + taskDef.entity;
   }
 
   var taskDefs = [];
@@ -37,64 +31,27 @@ module.exports = function (dashConfig) {
       inProgress = false;
       return;
     }
-    handleTask(next, handleTasksInQueue);
-  }
 
-  function handleTaskResult(taskDef, result) {
-    if (result.length == 0) {
-      console.log('Done ' + taskDef.name + ': No results to send');
-      return;
-    }
-    try {
-      post(dashUrl(taskDef), result, function () {
-        console.log('Done ' + taskDef.name + ': with ' + result.length + ' result(s)');
-      });
-    } catch (e) {
-      throw new Error('Could insert data in dash: ' + e);
-    }
-  }
-
-  function handleTask(taskDef, cb) {
-    function tearDown() {
+    taskExecutor(dashConfig, next, function() {
       timestamps[taskDef.name] = new Date().getTime();
       active.splice(active.indexOf(taskDef), 1);
-      cb();
-    }
+      handleTasksInQueue();
+    });
+  }
 
-    try {
-      console.log();
-      console.log('Starting task' + taskDef.name);
-      get(dashUrl(taskDef)+'/last-timestamp', function (timestamp) {
-        try {
-          taskDef.execute(timestamp, function (result) {
-            handleTaskResult(taskDef, result);
-            tearDown();
-          });
-        } catch (e) {
-          console.log("Error: " + e);
-          tearDown();
-        }
-      }, function() {
-        console.log("Failed to retrieve timestamp (Dash server problem)");
-        tearDown();
-      });
-    } catch (e) {
-      console.log("Error: " + e);
-      tearDown();
-    }
+  function shouldQueueTask(taskDef) {
+    return !timestamps[taskDef.name] || (timestamps[taskDef.name] + taskDef.interval * 1000) < new Date().getTime();
   }
 
   function updateTasks() {
     taskDefs.forEach(function (taskDef) {
-      if (!timestamps[taskDef.name]) {
-        addToQueue(taskDef);
-      } else if ((timestamps[taskDef.name] + taskDef.interval * 1000) < new Date().getTime()) {
+      if (shouldQueueTask(taskDef)) {
         addToQueue(taskDef);
       }
     });
 
-    triggerQueue();
     console.log('Update Tasks...');
+    triggerQueue();
   }
 
 
