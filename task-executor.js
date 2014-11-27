@@ -33,7 +33,7 @@ var post = require('./util/post');
     console.log('Starting task' + taskDef.name);
     get(dashUrl(taskDef) + '/last-timestamp', function (timestamp) {
       try {
-        taskDef.execute(timestamp, function (result) {
+        taskDef.trigger(timestamp, function (result) {
           handleTaskResult(taskDef, result);
           tearDown();
         });
