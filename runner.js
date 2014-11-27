@@ -110,8 +110,9 @@ module.exports = function (dashConfig) {
     })
   };
 
-  this.start = function (cron) {
-    if (cron) {
+  this.start = function (opts) {
+    opts = opts || { cron  : false};
+    if (opts.cron) {
       setInterval(updateTasks, 5000);
     }
     updateTasks();
