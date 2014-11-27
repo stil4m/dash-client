@@ -7,9 +7,6 @@
     "request": "~2.47.0"
   },
   "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/stil4m/dash-client.git"
