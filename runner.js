@@ -33,8 +33,8 @@ module.exports = function (dashConfig) {
     }
 
     taskExecutor(dashConfig, next, function() {
-      timestamps[taskDef.name] = new Date().getTime();
-      active.splice(active.indexOf(taskDef), 1);
+      timestamps[next.name] = new Date().getTime();
+      active.splice(active.indexOf(next), 1);
       handleTasksInQueue();
     });
   }
