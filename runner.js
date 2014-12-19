@@ -50,7 +50,7 @@ module.exports = function (dashConfig) {
       }
     });
 
-    console.log('Update Tasks...');
+    console.log('Update Tasks... ', new Date());
     triggerQueue();
   }
 
@@ -63,7 +63,8 @@ module.exports = function (dashConfig) {
       context : context,
       entity : entity,
       name : opts.name || (context + '/' + entity),
-      trigger : trigger
+      trigger : trigger,
+      interval : opts.interval
     })
   };
 
