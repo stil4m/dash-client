@@ -4,7 +4,9 @@
   "description": "Dash Client",
   "main": "lib.js",
   "dependencies": {
-    "request": "~2.47.0"
+    "request": "~2.47.0",
+    "promise": "^6.1.0",
+    "bunyan": "^1.3.3"
   },
   "devDependencies": {},
   "repository": {
