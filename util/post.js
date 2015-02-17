@@ -1,4 +1,5 @@
 var request = require('request');
+var Promise = require('promise');
 
 module.exports = function (url, payload) {
   return new Promise(function (accept, reject) {
