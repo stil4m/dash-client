@@ -1,16 +1,21 @@
 var request = require('request');
 
-module.exports = function (url, payload, cb) {
-  request({method : 'POST', url : url, json : true, body : payload}, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      var responseObject = response.body;
-      cb(responseObject);
-    } else {
-      if (response) {
-        console.log(response.body);
-        throw new Error('Invalid response: ' + response.statusCode);
+module.exports = function (url, payload) {
+  return new Promise(function (accept, reject) {
+    request({method : 'POST', url : url, json : true, body : payload}, function (error, response) {
+      if (!error && response.statusCode == 200) {
+        log.debug('POST: ' + url + "had successfull response");
+        var responseObject = response.body;
+        accept(responseObject);
+      } else {
+        if (response) {
+          log.debug("POST: Failed to post to url '" + url + "' with response code: " + response.statusCode);
+          reject('Invalid response: ' + response.statusCode);
+        } else {
+          log.debug("POST: Failed to post to url '" + url + "' with error");
+          reject('Error: ' + error);
+        }
       }
-      throw new Error('Error: ' + error);
-    }
+    });
   });
 };

@@ -1,50 +1,54 @@
-var get = require('./util/get');
-var post = require('./util/post');
+var Promise = require('promise');
+var log = require('./util/common').log;
 
- module.exports = function (dashConfig, taskDef, cb) {
-
-   function dashUrl(taskDef) {
-     return dashConfig.url + '/api/data/' + taskDef.context + '/' + taskDef.entity;
-   }
+module.exports = function (dashIntegration, taskDef) {
 
   function handleTaskResult(taskDef, result) {
-    if (result.length == 0) {
-      console.log('Done ' + taskDef.name + ': No results to send');
-      return;
-    }
-    try {
-      post(dashUrl(taskDef), result, function () {
-        console.log('Done ' + taskDef.name + ': with ' + result.length + ' result(s)');
-      });
-    } catch (e) {
-      throw new Error('Could insert data in dash: ' + e);
-    }
-  }
-
-  function tearDown(error) {
-    if (error) {
-      console.log(error);
-    }
-    cb();
-  }
-
-  try {
-    console.log();
-    console.log('Starting task' + taskDef.name);
-    get(dashUrl(taskDef) + '/last-timestamp', function (timestamp) {
-      try {
-        taskDef.trigger(timestamp, function (result) {
-          handleTaskResult(taskDef, result);
-          tearDown();
-        });
-      } catch (e) {
-        tearDown("Error: " + e.toString());
+    return new Promise(function (accept, reject) {
+      if (result.length == 0) {
+        log.info('No results for', taskDef.name);
+        accept();
+        return;
       }
-    }, function () {
-      tearDown("Failed to retrieve timestamp (Dash server problem)");
+
+      dashIntegration.saveResult(taskDef, result).then(function () {
+        log.info('Posted results for', taskDef.name, ':', result.length, 'result(s)');
+        accept();
+      }, reject)
     });
-  } catch (e) {
-    tearDown("Error: " + e.toString());
   }
+
+  function tearDown(result) {
+    if (!result.success) {
+      if (result && result.error) {
+        log.warn("Failed due to error:", result.error);
+      } else {
+        log.warn("Task rejected result:", result.data);
+      }
+    }
+  }
+
+  function doExecute(timestamp) {
+    return new Promise(function (resolve, reject) {
+      taskDef.trigger(timestamp, resolve, reject);
+    });
+  }
+
+  log.info('Starting task:', taskDef.name);
+
+  return dashIntegration.getTimestamp(taskDef)
+    .then(doExecute)
+    .then(function (result) {
+      return handleTaskResult(taskDef, result);
+    })
+    .then(function () {
+      tearDown({success : true});
+    }, function (e) {
+      if (typeof(e) == Error) {
+        tearDown({success : false, error : e});
+      } else {
+        tearDown({success : false, data : e});
+      }
+    });
 
 };

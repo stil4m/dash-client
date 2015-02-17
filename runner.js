@@ -1,8 +1,13 @@
+
 module.exports = function (dashConfig) {
-  var taskExecutor = require('./task-executor');
   if (!dashConfig.url) {
     throw new Error("Missing dash url");
   }
+
+  var util = require('./util/common');
+  var taskExecutor = require('./task-executor');
+  var DashIntegration = require('./dash-integration');
+  var dashIntegration = new DashIntegration(dashConfig);
 
   var taskDefs = [];
   var timestamps = {};
@@ -32,7 +37,7 @@ module.exports = function (dashConfig) {
       return;
     }
 
-    taskExecutor(dashConfig, next, function() {
+    taskExecutor(dashIntegration, next).then(function() {
       timestamps[next.name] = new Date().getTime();
       active.splice(active.indexOf(next), 1);
       handleTasksInQueue();
@@ -46,11 +51,12 @@ module.exports = function (dashConfig) {
   function updateTasks() {
     taskDefs.forEach(function (taskDef) {
       if (shouldQueueTask(taskDef)) {
+        util.log.info('Add to queue:', taskDef.name);
         addToQueue(taskDef);
       }
     });
 
-    console.log('Update Tasks... ', new Date());
+    util.log.info('Start update tasks');
     triggerQueue();
   }
 
@@ -71,7 +77,7 @@ module.exports = function (dashConfig) {
   this.start = function (opts) {
     opts = opts || { cron  : false};
     if (opts.cron) {
-      setInterval(updateTasks, 5000);
+      setInterval(updateTasks, 1000);
     }
     updateTasks();
   }
