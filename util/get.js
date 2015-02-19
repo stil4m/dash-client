@@ -1,7 +1,8 @@
 var request = require('request');
 var Promise = require('promise');
 
-var fetch = function (url) {
+var fetch = function (url, opts) {
+  opts = opts || {};
   var log = require('./common').log;
   return function (accept, reject) {
     request(url, function (error, response) {
@@ -16,20 +17,20 @@ var fetch = function (url) {
         return;
       }
       log.debug('GET to ' + url + "had successfull response");
-        var responseObject = JSON.parse(response.body);
-        accept(responseObject);
+      var responseObject = opts.raw ? response.body : JSON.parse(response.body);
+      accept(responseObject);
     });
   };
 };
 
-var doGet = function (url) {
+var doGet = function (url, opts) {
   if (typeof(url) === 'string') {
-    return new Promise(fetch(url));
+    return new Promise(fetch(url, opts));
   }
 
   var keys = Object.keys(url);
   var promises = keys.map(function (urlKey) {
-    return new Promise(fetch(url[urlKey]));
+    return new Promise(fetch(url[urlKey], opts));
   });
   return Promise.all(promises).then(function (input) {
     var answer = {};
