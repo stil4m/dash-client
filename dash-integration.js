@@ -5,7 +5,7 @@ var log = require('./util/common').log;
 module.exports = function (dashConfig) {
 
   function dashUrl(taskDef) {
-    return dashConfig.url + '/api/data/' + taskDef.context + '/' + taskDef.entity;
+    return dashConfig.url + '/api/data/' + taskDef.context + '-' + taskDef.entity;
   }
 
   this.getTimestamp = function (taskDef) {

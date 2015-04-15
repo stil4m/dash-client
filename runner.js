@@ -68,7 +68,7 @@ module.exports = function (dashConfig) {
     taskDefs.push({
       context : context,
       entity : entity,
-      name : opts.name || (context + '/' + entity),
+      name : opts.name || (context + '-' + entity),
       trigger : trigger,
       interval : opts.interval
     })
