@@ -22,7 +22,8 @@ module.exports = function (dashConfig) {
       transactions : [],
       lastErrorState : null,
       lastSuccessState : null,
-      lastResultState : null
+      lastResultState : null,
+      lastResultSize : null
     });
     var transactions = report.transactions;
 
@@ -34,10 +35,11 @@ module.exports = function (dashConfig) {
     }
     if (results > 0) {
       report.lastResultState = start;
+      report.lastResultSize = results;
     }
-    transactions.push({start : start, end : end, duration : end.getTime() - start.getTime(), state : state, results : results});
+    transactions.unshift({start : start, end : end, duration : end.getTime() - start.getTime(), state : state, results : results});
     if (transactions.length > 100) {
-      transactions.shift();
+      transactions.pop();
     }
   }
 
@@ -90,4 +92,10 @@ module.exports = function (dashConfig) {
     }
     updateTasks();
   };
+
+  this.getReport = function() {
+    return Object.keys(reports).map(function(key) {
+      return reports[key];
+    });
+  }
 };
