@@ -53,7 +53,6 @@ module.exports = function (dashConfig) {
     taskExecutor(dashIntegration, taskDef).then(function (result) {
       util.log.info('Finished task:', taskDef.name);
       delete queue[taskDef.name];
-      console.log(result.state, result.results);
       addTransaction(taskDef.name, start, new Date(), result.state, result.results);
     });
   }
