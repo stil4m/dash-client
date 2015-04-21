@@ -7,13 +7,13 @@ module.exports = function (dashIntegration, taskDef) {
     return new Promise(function (accept, reject) {
       if (result.length == 0) {
         log.info('No results for', taskDef.name);
-        accept();
+        accept(result.length);
         return;
       }
 
       dashIntegration.saveResult(taskDef, result).then(function () {
         log.info('Posted results for', taskDef.name, ':', result.length, 'result(s)');
-        accept();
+        accept(result.length);
       }, reject)
     });
   }
@@ -41,14 +41,16 @@ module.exports = function (dashIntegration, taskDef) {
     .then(function (result) {
       return handleTaskResult(taskDef, result);
     })
-    .then(function () {
+    .then(function (resultCount) {
       tearDown({success : true});
+      return {state: 'SUCCESS', results: resultCount};
     }, function (e) {
       if (typeof(e) == Error) {
         tearDown({success : false, error : e});
       } else {
         tearDown({success : false, data : e});
       }
+      return {state: 'ERROR'};
     });
 
 };

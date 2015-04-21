@@ -1,4 +1,3 @@
-
 module.exports = function (dashConfig) {
   if (!dashConfig.url) {
     throw new Error("Missing dash url");
@@ -11,36 +10,51 @@ module.exports = function (dashConfig) {
 
   var taskDefs = [];
   var timestamps = {};
-  var queue = [];
-  var inProgress = false;
-  var active = [];
+  var queue = {};
+
+  var reports = {
+
+  };
+
+  function addTransaction(name, start, end, state, results) {
+    var report = reports[name] || (reports[name] = {
+      name : name,
+      transactions : [],
+      lastErrorState : null,
+      lastSuccessState : null,
+      lastResultState : null
+    });
+    var transactions = report.transactions;
+
+    if (state == 'ERROR') {
+      report.lastErrorState = start;
+    }
+    if (state == 'SUCCESS') {
+      report.lastSuccessState = start;
+    }
+    if (results > 0) {
+      report.lastResultState = start;
+    }
+    transactions.push({start : start, end : end, duration : end.getTime() - start.getTime(), state : state, results : results});
+    if (transactions.length > 100) {
+      transactions.shift();
+    }
+  }
 
   function addToQueue(taskDef) {
-    if (queue.indexOf(taskDef) == -1 && active.indexOf(taskDef) == -1) {
-      queue.push(taskDef);
-    }
-  }
-
-  function triggerQueue() {
-    if (inProgress) {
+    if (queue[taskDef.name]) {
       return;
     }
-    inProgress = true;
-    handleTasksInQueue();
-  }
+    queue[taskDef.name] = taskDef;
+    util.log.info('Add to queue:', taskDef.name);
+    timestamps[taskDef.name] = new Date().getTime();
 
-  function handleTasksInQueue() {
-    var next = queue.shift();
-    active.push(next);
-    if (!next) {
-      inProgress = false;
-      return;
-    }
-
-    taskExecutor(dashIntegration, next).then(function() {
-      timestamps[next.name] = new Date().getTime();
-      active.splice(active.indexOf(next), 1);
-      handleTasksInQueue();
+    var start = new Date();
+    taskExecutor(dashIntegration, taskDef).then(function (result) {
+      util.log.info('Finished task:', taskDef.name);
+      delete queue[taskDef.name];
+      console.log(result.state, result.results);
+      addTransaction(taskDef.name, start, new Date(), result.state, result.results);
     });
   }
 
@@ -51,13 +65,9 @@ module.exports = function (dashConfig) {
   function updateTasks() {
     taskDefs.forEach(function (taskDef) {
       if (shouldQueueTask(taskDef)) {
-        util.log.info('Add to queue:', taskDef.name);
         addToQueue(taskDef);
       }
     });
-
-    util.log.info('Start update tasks');
-    triggerQueue();
   }
 
 
@@ -75,10 +85,10 @@ module.exports = function (dashConfig) {
   };
 
   this.start = function (opts) {
-    opts = opts || { cron  : false};
+    opts = opts || { cron : false};
     if (opts.cron) {
       setInterval(updateTasks, 1000);
     }
     updateTasks();
-  }
+  };
 };
